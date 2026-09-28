@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>京岗雷达 · 北京求职机会聚合看板</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230E4D5C'/><rect x='7' y='17' width='4' height='8' rx='1' fill='white'/><rect x='14' y='12' width='4' height='13' rx='1' fill='white'/><rect x='21' y='8' width='4' height='17' rx='1' fill='%23BE4535'/></svg>">
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@500;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+/* ============ 设计变量 ============ */
+:root{
+  --ink:#16212B; --ink-2:#3B4A57; --muted:#6A7885; --faint:#93A0AB;
+  --paper:#F1F4F6; --card:#FFFFFF; --line:#E1E7EB; --line-2:#EDF1F4;
+  --primary:#0E4D5C; --primary-2:#156678; --primary-soft:#E3EDEE;
+  --accent:#BE4535; --accent-soft:#F8EAE7;
+  --soe:#BE4535;  --soe-soft:#F8EAE7;
+  --priv:#2B6CB0; --priv-soft:#E7F0F9;
+  --fgn:#2E8B74;  --fgn-soft:#E4F2ED;
+  --gov:#A8801F;  --gov-soft:#F5EEDC;
+  --intern:#2B6CB0; --campus:#0E4D5C; --social:#8A5A2B;
+  --serif:'Noto Serif SC','Songti SC','SimSun',serif;
+  --sans:'Noto Sans SC',-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;
+  --shadow:0 1px 2px rgba(22,33,43,.05),0 6px 20px -12px rgba(22,33,43,.18);
+  --shadow-lg:0 8px 40px -12px rgba(22,33,43,.30);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--sans);color:var(--ink);background:var(--paper);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select{font-family:inherit}
+a{color:inherit;text-decoration:none}
+::selection{background:var(--primary);color:#fff}
+.num{font-feature-settings:"tnum";font-variant-numeric:tabular-nums}
+.icon{width:16px;height:16px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* ============ 顶部栏 ============ */
+.topbar{position:sticky;top:0;z-index:60;background:rgba(255,255,255,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.topbar-inner{max-width:1320px;margin:0 auto;padding:0 24px;height:64px;display:flex;align-items:center;gap:20px}
+.brand{display:flex;align-items:center;gap:11px;flex:none}
+.brand-mark{width:36px;height:36px;border-radius:9px;background:var(--primary);display:grid;place-items:center;box-shadow:inset 0 -2px 0 rgba(0,0,0,.15)}
+.brand-mark svg{width:21px;height:21px}
+.brand-name{font-family:var(--serif);font-weight:700;font-size:19px;letter-spacing:.5px;line-height:1.1}
+.brand-sub{font-size:11px;color:var(--muted);letter-spacing:1.6px;margin-top:1px}
+.searchbox{flex:1;max-width:460px;position:relative;margin:0 auto}
+.searchbox .icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--faint);width:17px;height:17px}
+.searchbox input{width:100%;height:40px;border:1px solid var(--line);border-radius:9px;background:var(--paper);padding:0 38px 0 39px;font-size:13.5px;color:var(--ink);outline:none;transition:.18s}
+.searchbox input:focus{border-color:var(--primary);background:#fff;box-shadow:0 0 0 3px var(--primary-soft)}
+.search-clear{position:absolute;right:9px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;display:none;place-items:center;color:var(--muted)}
+.search-clear:hover{background:var(--line)}
+.topbar-right{display:flex;align-items:center;gap:14px;flex:none}
+.update-meta{text-align:right;font-size:11.5px;color:var(--muted);line-height:1.4}
+.update-meta b{display:block;color:var(--ink-2);font-weight:500;font-size:12.5px}
+.btn{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 16px;border-radius:9px;font-size:13.5px;font-weight:500;transition:.16s;border:1px solid transparent;white-space:nowrap}
+.btn .icon{width:16px;height:16px}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-2)}
+.btn-ghost{background:#fff;border-color:var(--line);color:var(--ink-2)}
+.btn-ghost:hover{border-color:var(--primary);color:var(--primary)}
+.btn-block{width:100%;justify-content:center;height:42px}
+
+/* ============ 导航 ============ */
+.mainnav{display:flex;gap:4px;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:3px}
+.nav-item{height:34px;padding:0 15px;border-radius:7px;display:flex;align-items:center;gap:7px;font-size:13.5px;color:var(--muted);font-weight:500;transition:.15s;position:relative}
+.nav-item .icon{width:16px;height:16px}
+.nav-item:hover{color:var(--ink)}
+.nav-item.active{background:#fff;color:var(--primary);box-shadow:var(--shadow)}
+.nav-badge{background:var(--accent);color:#fff;font-size:10.5px;min-width:17px;height:17px;border-radius:9px;padding:0 5px;display:grid;place-items:center;font-weight:600}
+.nav-item.active .nav-badge{background:var(--accent)}
+
+/* ============ 视图容器 ============ */
+.view{max-width:1320px;margin:0 auto;padding:24px;display:none}
+.view.active{display:block;animation:viewIn .25s ease}
+@keyframes viewIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ============ 统计条 ============ */
+.stats-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:22px}
+.stat-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px 18px;transition:.18s;position:relative;overflow:hidden}
+.stat-card:hover{box-shadow:var(--shadow);transform:translateY(-2px)}
+.stat-label{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;margin-bottom:7px}
+.stat-dot{width:7px;height:7px;border-radius:50%}
+.stat-value{font-family:var(--serif);font-weight:700;font-size:28px;line-height:1;letter-spacing:.5px}
+.stat-unit{font-size:12px;color:var(--muted);font-family:var(--sans);font-weight:400;margin-left:3px}
+.stat-trend{font-size:11px;color:var(--fgn);margin-top:7px;display:flex;align-items:center;gap:3px}
+.stat-card.is-urgent .stat-value{color:var(--accent)}
+
+/* ============ 工作区布局 ============ */
+.workspace{display:grid;grid-template-columns:250px 1fr;gap:20px;align-items:start}
+.filter-panel{background:var(--card);border:1px solid var(--line);border-radius:12px;position:sticky;top:88px;overflow:hidden}
+.filter-head{padding:15px 17px;border-bottom:1px solid var(--line-2);display:flex;align-items:center;justify-content:space-between}
+.filter-head h3{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+.filter-head h3 .icon{color:var(--primary)}
+.filter-clear{font-size:12px;color:var(--muted);padding:3px 7px;border-radius:6px}
+.filter-clear:hover{color:var(--accent);background:var(--accent-soft)}
+.filter-body{padding:6px 17px 15px;max-height:calc(100vh - 160px);overflow-y:auto}
+.filter-group{padding:13px 0;border-bottom:1px dashed var(--line-2)}
+.filter-group:last-child{border-bottom:none}
+.filter-title{font-size:12px;color:var(--muted);letter-spacing:1px;margin-bottom:9px;font-weight:500}
+.opt{display:flex;align-items:center;gap:9px;padding:5px 4px;border-radius:6px;cursor:pointer;font-size:13.5px;transition:.12s}
+.opt:hover{background:var(--paper)}
+.opt input{display:none}
+.opt-box{width:16px;height:16px;border-radius:5px;border:1.5px solid #C4CDD4;display:grid;place-items:center;transition:.14s;flex:none}
+.opt-box svg{width:10px;height:10px;stroke:#fff;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round;opacity:0;transition:.12s}
+.opt input:checked + .opt-box{background:var(--primary);border-color:var(--primary)}
+.opt input:checked + .opt-box svg{opacity:1}
+.opt-count{margin-left:auto;font-size:11.5px;color:var(--faint)}
+.opt-dot{width:8px;height:8px;border-radius:50%;flex:none}
+.opt select{display:none}
+.sel{width:100%;height:36px;border:1px solid var(--line);border-radius:8px;padding:0 10px;font-size:13px;background:#fff;outline:none;color:var(--ink)}
+.sel:focus{border-color:var(--primary)}
+
+/* ===== 两级行业筛选 ===== */
+.cat-block{margin-bottom:3px}
+.cat-row{display:flex;align-items:center;gap:1px;border-radius:8px}
+.cat-toggle{width:28px;height:31px;display:grid;place-items:center;color:#566270;border-radius:6px;flex:none}
+.cat-toggle:hover{background:var(--paper);color:var(--ink)}
+.cat-toggle .icon{width:16px;height:16px;stroke-width:2.5}
+.cat-label{flex:1;display:flex;align-items:center;gap:9px;padding:5px 8px 5px 3px;border-radius:7px;cursor:pointer}
+.cat-label:hover{background:var(--paper)}
+.cat-label>input{display:none}
+.cat-label .opt-box.cat-checked{background:var(--primary);border-color:var(--primary)}
+.cat-label .opt-box.cat-checked svg{opacity:1}
+.cat-label .opt-box.cat-mixed{background:var(--primary);border-color:var(--primary)}
+.cat-label .opt-box.cat-mixed::after{content:"";width:8px;height:2px;background:#fff;border-radius:1px}
+.cat-label .opt-box.cat-mixed svg{opacity:0}
+.cat-name{font-size:13.5px;font-weight:700;color:var(--ink)}
+.cat-children{margin:1px 0 7px 13px;padding-left:14px;border-left:2px solid var(--line-2);display:flex;flex-direction:column}
+.cat-block.collapsed .cat-children{display:none}
+.cat-children .opt{padding:4px}
+
+/* ============ 列表区 ============ */
+.list-head{display:flex;align-items:center;gap:14px;margin-bottom:15px;flex-wrap:wrap}
+.seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
+.seg-btn{height:34px;padding:0 16px;border-radius:7px;font-size:13.5px;color:var(--muted);font-weight:500;display:flex;align-items:center;gap:7px;transition:.15s}
+.seg-btn:hover{color:var(--ink)}
+.seg-btn.active{background:var(--primary);color:#fff}
+.seg-btn .cnt{font-size:11.5px;opacity:.75}
+.seg-btn.active .cnt{opacity:.9}
+.list-toolbar{margin-left:auto;display:flex;align-items:center;gap:10px}
+.result-count{font-size:12.5px;color:var(--muted)}
+.result-count b{color:var(--ink-2);font-weight:600}
+.sort-sel{height:36px;border:1px solid var(--line);border-radius:8px;padding:0 28px 0 11px;font-size:13px;background:#fff url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236A7885' stroke-width='2.2' stroke-linecap='round'><path d='M6 9l6 6 6-6'/></svg>") no-repeat right 9px center;outline:none;appearance:none;cursor:pointer}
+.mobile-filter-btn{display:none}
+
+.job-list{display:flex;flex-direction:column;gap:11px}
+.job-row{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;gap:16px;transition:.17s;cursor:pointer;position:relative}
+.job-row:hover{border-color:#C7D2D9;box-shadow:var(--shadow);transform:translateY(-1px)}
+.job-main{flex:1;min-width:0}
+.job-line1{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:6px}
+.job-title{font-size:15.5px;font-weight:700;color:var(--ink);letter-spacing:.2px}
+.job-row:hover .job-title{color:var(--primary)}
+.hot-flag{font-size:10.5px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:2px 7px;border-radius:5px;display:inline-flex;align-items:center;gap:3px}
+.job-line2{display:flex;align-items:center;gap:13px;font-size:12.5px;color:var(--muted);flex-wrap:wrap;margin-bottom:9px}
+.job-company{font-family:var(--serif);font-weight:600;font-size:13.5px;color:var(--ink-2)}
+.job-line2 .sep{width:3px;height:3px;border-radius:50%;background:var(--faint)}
+.job-tags{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:11.5px;color:var(--muted);background:var(--paper);border:1px solid var(--line-2);padding:2.5px 9px;border-radius:20px}
+.src-link{display:inline-flex;align-items:center;font-size:11.5px;color:var(--primary);border:1px solid var(--primary);padding:1px 9px;border-radius:20px;margin-left:2px}
+.src-link:hover{background:var(--primary);color:#fff}
+.job-side{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:10px;flex:none;min-width:118px}
+.deadline{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-2)}
+.deadline .icon{width:14.5px;height:14.5px;color:var(--faint)}
+.deadline.urgent{color:var(--accent);font-weight:600}
+.deadline.urgent .icon{color:var(--accent)}
+.pub-date{font-size:11.5px;color:var(--faint)}
+.fav-btn{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;color:var(--faint);transition:.15s;border:1px solid transparent}
+.fav-btn:hover{background:var(--paper);border-color:var(--line)}
+.fav-btn .icon{width:18px;height:18px}
+.fav-btn.on{color:var(--accent)}
+.fav-btn.on .icon{fill:currentColor;stroke:currentColor}
+.row-actions{display:flex;gap:7px;align-items:center}
+.applied-dot{font-size:11px;color:var(--fgn);display:inline-flex;align-items:center;gap:4px;background:var(--fgn-soft);padding:3px 8px;border-radius:6px;font-weight:500}
+
+/* ============ 徽章 ============ */
+.badge{font-size:11px;font-weight:600;padding:2.5px 9px;border-radius:6px;display:inline-flex;align-items:center;gap:4.5px;line-height:1.5;white-space:nowrap}
+.badge .bdot{width:6px;height:6px;border-radius:50%}
+.b-intern{color:var(--intern);background:var(--priv-soft)}
+.b-campus{color:var(--campus);background:var(--primary-soft)}
+.b-social{color:var(--social);background:#F4ECE2}
+.b-soe{color:var(--soe);background:var(--soe-soft)}
+.b-priv{color:var(--priv);background:var(--priv-soft)}
+.b-fgn{color:var(--fgn);background:var(--fgn-soft)}
+.b-gov{color:var(--gov);background:var(--gov-soft)}
+
+/* ============ 空态 ============ */
+.empty{background:var(--card);border:1px dashed #C9D3DA;border-radius:12px;padding:64px 24px;text-align:center}
+.empty svg{width:52px;height:52px;stroke:var(--faint);margin-bottom:16px}
+.empty h4{font-size:15px;font-weight:600;margin-bottom:7px}
+.empty p{font-size:13px;color:var(--muted);margin-bottom:18px}
+.data-status{display:flex;align-items:center;justify-content:center;min-height:250px;background:var(--card);border:1px dashed #C9D3DA;border-radius:12px;padding:42px 24px;text-align:center}
+.data-status[hidden]{display:none}
+.data-status-inner{max-width:560px}
+.data-status-icon{width:38px;height:38px;margin:0 auto 14px;color:var(--primary)}
+.data-status.loading .data-status-icon{animation:dataSpin .9s linear infinite}
+.data-status.error .data-status-icon{color:var(--accent)}
+.data-status h4{font-size:16px;font-weight:650;margin-bottom:8px}
+.data-status p{font-size:13px;line-height:1.75;color:var(--muted);margin-bottom:16px}
+@keyframes dataSpin{to{transform:rotate(360deg)}}
+
+/* ============ 数据概览 ============ */
+.overview-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.chart-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px 10px}
+.chart-card.wide{grid-column:1/-1}
+.chart-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px}
+.chart-head h3{font-size:14.5px;font-weight:700}
+.chart-head p{font-size:11.5px;color:var(--muted)}
+.ov-row{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.chart-box.sm{height:250px}
+.lg{display:inline-flex;align-items:center;font-size:11px;color:var(--muted)}
+.lg-dot{width:8px;height:8px;border-radius:2px;margin-right:4px}
+.chart-box{height:290px;width:100%}
+.chart-box.tall{height:320px}
+
+/* ============ 收藏视图 ============ */
+.saved-seg{display:flex;gap:8px;margin-bottom:18px}
+.saved-seg .seg-btn{background:var(--card);border:1px solid var(--line)}
+.saved-seg .seg-btn.active{background:var(--primary);border-color:var(--primary)}
+.saved-group-title{font-size:13px;color:var(--muted);margin:22px 0 11px;font-weight:600;display:flex;align-items:center;gap:9px}
+.saved-group-title:first-child{margin-top:0}
+.saved-group-title .num-c{background:var(--primary-soft);color:var(--primary);font-size:11.5px;padding:1px 9px;border-radius:20px;font-weight:600}
+
+/* ============ 详情抽屉 ============ */
+.mask{position:fixed;inset:0;background:rgba(20,30,40,.42);z-index:90;opacity:0;pointer-events:none;transition:.25s}
+.mask.open{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:500px;max-width:100vw;background:var(--paper);z-index:100;transform:translateX(100%);visibility:hidden;transition:transform .3s cubic-bezier(.4,0,.2,1),visibility 0s linear .3s;display:flex;flex-direction:column;box-shadow:var(--shadow-lg)}
+.drawer.open{transform:none;visibility:visible;transition:transform .3s cubic-bezier(.4,0,.2,1),visibility 0s}
+.drawer-top{background:#fff;border-bottom:1px solid var(--line);padding:18px 24px;display:flex;align-items:flex-start;gap:12px}
+.drawer-top .dt-main{flex:1;min-width:0}
+.drawer-close{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;color:var(--muted);flex:none}
+.drawer-close:hover{background:var(--paper)}
+.drawer-badges{display:flex;gap:7px;flex-wrap:wrap;margin:9px 0 11px}
+.drawer-meta{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:12.5px;color:var(--muted)}
+.drawer-meta span{display:inline-flex;align-items:center;gap:6px}
+.drawer-meta .icon{width:14.5px;height:14.5px;color:var(--faint)}
+.drawer-body{flex:1;overflow-y:auto;padding:20px 24px 28px}
+.d-section{background:#fff;border:1px solid var(--line);border-radius:11px;padding:16px 18px;margin-bottom:13px}
+.d-section h4{font-size:13px;font-weight:700;margin-bottom:11px;display:flex;align-items:center;gap:8px;color:var(--ink)}
+.d-section h4::before{content:"";width:3px;height:13px;border-radius:2px;background:var(--primary)}
+.d-section ul{list-style:none;display:flex;flex-direction:column;gap:8px}
+.d-section li{font-size:13px;color:var(--ink-2);padding-left:17px;position:relative;line-height:1.65}
+.d-section li::before{content:"";position:absolute;left:2px;top:9px;width:5px;height:5px;border-radius:50%;background:var(--faint)}
+.d-section p{font-size:13px;color:var(--ink-2);line-height:1.7}
+.d-tags{display:flex;gap:7px;flex-wrap:wrap}
+.source-line{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--muted);background:#fff;border:1px dashed var(--line);border-radius:10px;padding:11px 15px;margin-bottom:13px}
+.drawer-foot{background:#fff;border-top:1px solid var(--line);padding:14px 24px;display:flex;gap:10px}
+.drawer-foot .btn{flex:1;justify-content:center;height:44px;font-size:14px}
+.status-toggle{padding:0 14px;height:44px;border-radius:9px;border:1px solid var(--line);display:flex;align-items:center;gap:7px;font-size:13px;color:var(--ink-2);background:#fff}
+.status-toggle.on{color:var(--fgn);border-color:var(--fgn);background:var(--fgn-soft)}
+.status-toggle .icon{width:16px;height:16px}
+
+/* ============ 移动端筛选抽屉 ============ */
+.filter-drawer{position:fixed;inset:0;z-index:100;display:none}
+.filter-drawer.open{display:block}
+.filter-drawer .mask{opacity:1;pointer-events:auto}
+.filter-sheet{position:fixed;left:0;right:0;bottom:0;top:60px;background:var(--paper);z-index:101;border-radius:16px 16px 0 0;transform:translateY(100%);visibility:hidden;transition:transform .3s cubic-bezier(.4,0,.2,1),visibility 0s linear .3s;display:flex;flex-direction:column}
+.filter-drawer.open .filter-sheet{transform:none;visibility:visible;transition:transform .3s cubic-bezier(.4,0,.2,1),visibility 0s}
+.filter-sheet-head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;background:#fff;border-radius:16px 16px 0 0}
+.filter-sheet-head h3{font-size:15px;font-weight:700}
+.filter-sheet-body{flex:1;overflow-y:auto;padding:0 20px}
+.filter-sheet-foot{padding:13px 20px;background:#fff;border-top:1px solid var(--line);display:flex;gap:10px}
+.filter-sheet-foot .btn{flex:1;justify-content:center;height:44px}
+
+/* ============ Toast ============ */
+.toast-wrap{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:9px;align-items:center;pointer-events:none}
+.toast{background:#1F2C37;color:#fff;font-size:13px;padding:11px 19px;border-radius:9px;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:9px;animation:toastIn .28s cubic-bezier(.3,1.2,.5,1);max-width:90vw}
+.toast .icon{width:16px;height:16px;color:#7FC7B8}
+.toast.out{animation:toastOut .25s forwards}
+@keyframes toastIn{from{opacity:0;transform:translateY(14px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes toastOut{to{opacity:0;transform:translateY(8px)}}
+
+/* ============ 响应式 ============ */
+@media (max-width:1080px){
+  .stats-strip{grid-template-columns:repeat(3,1fr)}
+  .stat-card:nth-child(5){grid-column:span 3}
+  .workspace{grid-template-columns:224px 1fr}
+}
+@media (max-width:860px){
+  .topbar-inner{flex-wrap:wrap;height:auto;padding:10px 16px;gap:10px}
+  .brand{order:1}
+  .topbar-right{order:2;margin-left:auto}
+  .update-meta{display:none}
+  .searchbox{order:3;max-width:none;flex-basis:100%;margin:0}
+  .mainnav{order:4;flex-basis:100%;overflow-x:auto}
+  .nav-item{white-space:nowrap}
+  .view{padding:16px}
+  .workspace{grid-template-columns:1fr}
+  .filter-panel{display:none}
+  .mobile-filter-btn{display:inline-flex}
+  .overview-grid{grid-template-columns:1fr}
+  .ov-row{grid-template-columns:1fr}
+  .job-side{min-width:104px}
+  #searchInput{font-size:16px}
+}
+@media (max-width:560px){
+  .stats-strip{grid-template-columns:repeat(2,1fr);gap:10px}
+  .stat-card:nth-child(5){grid-column:span 2}
+  .stat-value{font-size:24px}
+  .job-row{flex-direction:column;gap:11px;padding:14px 15px}
+  .job-side{flex-direction:row;align-items:center;width:100%;justify-content:space-between;min-width:0}
+  .row-actions{order:2}
+  .list-toolbar{width:100%;margin-left:0;justify-content:space-between}
+  .seg-btn{padding:0 12px}
+  .drawer{width:100%}
+  .rf-txt{display:none}
+  #refreshBtn{padding:0 12px}
+}
+</style>
+</head>
+<body>
+<!-- ===== SVG 图标库 ===== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></symbol>
+  <symbol id="i-briefcase" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3l2.7 5.5 6 .9-4.3 4.2 1 6-5.4-2.8L6.6 19.6l1-6L3.3 9.4l6-.9z"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 5h16M7 12h10M10 19h4"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-building" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="1.5"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2M10 21v-3h4v3"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+  <symbol id="i-grad" viewBox="0 0 24 24"><path d="M12 4L2 9l10 5 10-5z"/><path d="M6 11.5V16c3 2 9 2 12 0v-4.5M22 9v5"/></symbol>
+  <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9"/><path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M13 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9z"/><path d="M13 3v6h6"/></symbol>
+  <symbol id="i-fire" viewBox="0 0 24 24"><path d="M12 3s4 3.5 4 8a4 4 0 0 1-8 0c0-1.3.5-2.3 1-3 .2 1 .9 1.6 1.5 1.5C10 7.5 12 5.5 12 3z"/></symbol>
+</svg>
+
+<!-- ===== 顶部栏 ===== -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 32 32"><rect x="6" y="17" width="4.5" height="8.5" rx="1" fill="#fff"/><rect x="13.7" y="11" width="4.5" height="14.5" rx="1" fill="#fff"/><rect x="21.4" y="6.5" width="4.5" height="19" rx="1" fill="#E8A197"/></svg>
+      </div>
+      <div>
+        <div class="brand-name">京岗雷达</div>
+        <div class="brand-sub">JOB RADAR</div>
+      </div>
+    </div>
+    <div class="searchbox">
+      <svg class="icon"><use href="#i-search"/></svg>
+      <input id="searchInput" type="text" placeholder="搜索岗位、机构、关键词，如：央行、投行、高校、教师…">
+      <button class="search-clear" id="searchClear" aria-label="清除"><svg class="icon"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="topbar-right">
+      <div class="update-meta">
+        <b>实时数据 · 共 <span id="metaTotal">0</span> 个在招机会</b>
+        最近更新 <span id="metaTime">--</span>
+      </div>
+      <button class="btn btn-primary" id="refreshBtn">
+        <svg class="icon"><use href="#i-refresh"/></svg><span class="rf-txt">立即更新</span>
+      </button>
+      <nav class="mainnav">
+        <button class="nav-item active" data-view="jobs"><svg class="icon"><use href="#i-briefcase"/></svg>岗位看板</button>
+        <button class="nav-item" data-view="overview"><svg class="icon"><use href="#i-chart"/></svg>数据概览</button>
+        <button class="nav-item" data-view="saved"><svg class="icon"><use href="#i-star"/></svg>我的收藏<span class="nav-badge" id="navSavedCnt">0</span></button>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<!-- ===== 视图：岗位看板 ===== -->
+<main class="view active" id="view-jobs">
+  <div class="stats-strip" id="statsStrip">
+    <div class="stat-card"><div class="stat-label"><span class="stat-dot" style="background:var(--primary)"></span>全部在招</div><div class="stat-value num" id="stTotal">0</div><div class="stat-trend">本周新增 <b id="stWeek">0</b> 个</div></div>
+    <div class="stat-card"><div class="stat-label"><span class="stat-dot" style="background:var(--intern)"></span>实习</div><div class="stat-value num" id="stIntern">0</div><div class="stat-trend">日常/暑期实习</div></div>
+    <div class="stat-card"><div class="stat-label"><span class="stat-dot" style="background:var(--campus)"></span>校招</div><div class="stat-value num" id="stCampus">0</div><div class="stat-trend">应届毕业生</div></div>
+    <div class="stat-card"><div class="stat-label"><span class="stat-dot" style="background:var(--social)"></span>社招</div><div class="stat-value num" id="stSocial">0</div><div class="stat-trend">社会招聘</div></div>
+    <div class="stat-card is-urgent"><div class="stat-label"><span class="stat-dot" style="background:var(--accent)"></span>即将截止（7天内）</div><div class="stat-value num" id="stUrgent">0</div><div class="stat-trend" style="color:var(--accent)">建议优先投递</div></div>
+  </div>
+  <div class="workspace">
+    <aside class="filter-panel">
+      <div class="filter-head"><h3><svg class="icon"><use href="#i-filter"/></svg>筛选条件</h3><button class="filter-clear" id="filterClear">清除</button></div>
+      <div class="filter-body" id="filterBody"></div>
+    </aside>
+    <section class="list-area">
+      <div class="list-head">
+        <div class="seg" id="typeSeg">
+          <button class="seg-btn active" data-type="all">全部<span class="cnt" id="cntAll">0</span></button>
+          <button class="seg-btn" data-type="intern">实习<span class="cnt" id="cntIntern">0</span></button>
+          <button class="seg-btn" data-type="campus">校招<span class="cnt" id="cntCampus">0</span></button>
+          <button class="seg-btn" data-type="social">社招<span class="cnt" id="cntSocial">0</span></button>
+        </div>
+        <div class="list-toolbar">
+          <button class="btn btn-ghost mobile-filter-btn" id="mobileFilterBtn"><svg class="icon"><use href="#i-sliders"/></svg>筛选</button>
+          <span class="result-count">共 <b id="resultCount">0</b> 条</span>
+          <select class="sort-sel" id="sortSel">
+            <option value="latest">最新发布</option>
+            <option value="deadline">即将截止</option>
+            <option value="hot">热门优先</option>
+          </select>
+        </div>
+      </div>
+      <div class="data-status loading" id="dataStatus" role="status" aria-live="polite">
+        <div class="data-status-inner">
+          <svg class="icon data-status-icon"><use href="#i-refresh"/></svg>
+          <h4 id="dataStatusTitle">岗位数据加载中</h4>
+          <p id="dataStatusText">正在读取 jobs.json，请稍候…</p>
+          <button class="btn btn-primary" id="dataRetry" type="button" hidden>重新加载</button>
+        </div>
+      </div>
+      <div class="job-list" id="jobList" hidden></div>
+      <div class="empty" id="emptyBox" style="display:none">
+        <svg class="icon" style="width:52px;height:52px;stroke-width:1.3"><use href="#i-search"/></svg>
+        <h4>没有找到符合条件的岗位</h4>
+        <p>试试减少筛选条件，或更换搜索关键词；新的机会每天都会持续收录。</p>
+        <button class="btn btn-primary" id="emptyReset">清除全部筛选</button>
+      </div>
+    </section>
+  </div>
+</main>
+
+<!-- ===== 视图：数据概览 ===== -->
+<main class="view" id="view-overview">
+  <div class="overview-grid">
+    <div class="chart-card wide">
+      <div class="chart-head"><h3>近 30 天岗位收录趋势</h3><p>按发布日期统计</p></div>
+      <div class="chart-box tall" id="chartTrend"></div>
+    </div>
+    <div class="ov-row">
+      <div class="chart-card">
+        <div class="chart-head"><h3>单位性质分布</h3><p>国央企 / 私企 / 外企 / 机关事业</p></div>
+        <div class="chart-box sm" id="chartOwn"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-head"><h3>招聘类型分布</h3><p>实习 / 校招 / 社招</p></div>
+        <div class="chart-box sm" id="chartType"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-head"><h3>专业大类分布</h3><p>经济类 / 教育类</p></div>
+        <div class="chart-box sm" id="chartCat"></div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-head"><h3>行业分布</h3>
+        <p class="lg"><span class="lg-dot" style="background:#0E4D5C"></span>经济类<span class="lg-dot" style="background:#B0862A;margin-left:8px"></span>教育类</p></div>
+      <div class="chart-box tall" id="chartInd"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-head"><h3>城市分布</h3><p>岗位数量 Top 城市</p></div>
+      <div class="chart-box tall" id="chartCity"></div>
+    </div>
+  </div>
+</main>
+
+<!-- ===== 视图：我的收藏 ===== -->
+<main class="view" id="view-saved">
+  <div class="saved-seg" id="savedSeg">
+    <button class="seg-btn active" data-saved="saved"><svg class="icon"><use href="#i-star"/></svg>我的收藏 <span class="cnt" id="savedCnt">0</span></button>
+    <button class="seg-btn" data-saved="applied"><svg class="icon"><use href="#i-check"/></svg>已投递 <span class="cnt" id="appliedCnt">0</span></button>
+  </div>
+  <div id="savedList"></div>
+</main>
+
+<!-- ===== 详情抽屉 ===== -->
+<div class="mask" id="mask"></div>
+<aside class="drawer" id="drawer">
+  <div class="drawer-top">
+    <div class="dt-main">
+      <h2 id="dTitle" style="font-size:19px;font-weight:700;line-height:1.35"></h2>
+      <div class="drawer-badges" id="dBadges"></div>
+      <div class="drawer-meta" id="dMeta"></div>
+    </div>
+    <button class="drawer-close" id="drawerClose" aria-label="关闭"><svg class="icon" style="width:19px;height:19px"><use href="#i-x"/></svg></button>
+  </div>
+  <div class="drawer-body">
+    <div class="source-line">
+      <span style="display:inline-flex;align-items:center;gap:7px;flex-wrap:wrap"><svg class="icon"><use href="#i-file"/></svg>来源：<b id="dSource" style="color:var(--ink-2);font-weight:500"></b><a id="dUrl" target="_blank" rel="noopener" class="src-link">查看原网页</a></span>
+      <span id="dPub"></span>
+    </div>
+    <div class="d-section"><h4>岗位职责</h4><ul id="dResp"></ul></div>
+    <div class="d-section"><h4>任职要求</h4><ul id="dReq"></ul></div>
+    <div class="d-section"><h4>单位简介</h4><p id="dAbout"></p></div>
+    <div class="d-section"><h4>关键词</h4><div class="d-tags" id="dTags"></div></div>
+  </div>
+  <div class="drawer-foot">
+    <button class="btn btn-ghost" id="dFav"><svg class="icon"><use href="#i-star"/></svg><span id="dFavText">收藏</span></button>
+    <button class="status-toggle" id="dApplied"><svg class="icon"><use href="#i-check"/></svg><span id="dAppliedText">标记已投递</span></button>
+    <button class="btn btn-primary" id="dLink"><svg class="icon"><use href="#i-external"/></svg>查看原文公告</button>
+  </div>
+</aside>
+
+<!-- ===== 移动端筛选抽屉 ===== -->
+<div class="filter-drawer" id="filterDrawer">
+  <div class="mask" id="filterMask"></div>
+  <div class="filter-sheet">
+    <div class="filter-sheet-head">
+      <h3>筛选条件</h3>
+      <button class="drawer-close" id="filterSheetClose"><svg class="icon" style="width:19px;height:19px"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="filter-sheet-body" id="filterBodyM"></div>
+    <div class="filter-sheet-foot">
+      <button class="btn btn-ghost" id="filterResetM">重置</button>
+      <button class="btn btn-primary" id="filterApplyM">查看 <b id="filterApplyCnt">0</b> 个结果</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+<script>
+/* ============ 分类字典 ============ */
+var OWN_MAP={
+  soe:{name:'国央企',cls:'b-soe',color:'#BE4535'},
+  priv:{name:'私企',cls:'b-priv',color:'#2B6CB0'},
+  fgn:{name:'外企',cls:'b-fgn',color:'#2E8B74'},
+  gov:{name:'机关事业单位',cls:'b-gov',color:'#A8801F'}
+};
+var TYPE_MAP={
+  intern:{name:'实习',cls:'b-intern',color:'#2B6CB0'},
+  campus:{name:'校招',cls:'b-campus',color:'#0E4D5C'},
+  social:{name:'社招',cls:'b-social',color:'#8A5A2B'}
+};
+var IND_MAP={policy:'央行/政策性银行',bank:'银行',securities:'证券',fund:'基金/资管',insurance:'保险',accounting:'会计师事务所',consulting:'咨询',regulator:'监管/政府机关',corporate:'企业财务/投资',fintech:'金融科技',trade:'国际贸易',
+edu_gov:'教育行政/教研机构',uni_teach:'高校教学科研',uni_staff:'高校辅导员/行政',school:'中小学/学前教育',intl:'国际学校',train:'教育培训/留学',edtech:'在线教育/教育科技',pub:'教育出版传媒'};
+var CAT_MAP={econ:'经济类',edu:'教育类'};
+var CAT_OF={};
+['policy','bank','securities','fund','insurance','accounting','consulting','regulator','corporate','fintech','trade'].forEach(function(k){CAT_OF[k]='econ';});
+['edu_gov','uni_teach','uni_staff','school','intl','train','edtech','pub'].forEach(function(k){CAT_OF[k]='edu';});
+var EDU_LIST=['不限','本科','硕士','博士'];
+
+/* ============ 岗位数据（启动时从 jobs.json 加载） ============ */
+var JOBS=[];
+var DATA_UPDATED_AT='--';
+var dataLoading=false;
+
+/* ============ 全局状态 ============ */
+var TODAY=new Date();TODAY.setHours(0,0,0,0);
+var state={q:'',type:'all',own:[],ind:[],edu:'不限',sort:'latest',savedTab:'saved',current:null,collapsed:{econ:false,edu:false}};
+var SAVED={},APPLIED={};
+try{SAVED=JSON.parse(localStorage.getItem('ejr_saved')||'{}');APPLIED=JSON.parse(localStorage.getItem('ejr_applied')||'{}');}catch(e){}
+function persist(){try{localStorage.setItem('ejr_saved',JSON.stringify(SAVED));localStorage.setItem('ejr_applied',JSON.stringify(APPLIED));}catch(e){}}
+
+function $(id){return document.getElementById(id);}
+function daysTo(dl){var d=new Date(dl+'T00:00:00');return isNaN(d.getTime())?Infinity:Math.round((d-TODAY)/86400000);}
+function daysAgo(p){var d=new Date(p+'T00:00:00');return isNaN(d.getTime())?null:Math.round((TODAY-d)/86400000);}
+function md(s){var d=new Date(s+'T00:00:00');return isNaN(d.getTime())?'日期待定':(d.getMonth()+1)+'月'+d.getDate()+'日';}
+function countBy(arr,key){var m={};arr.forEach(function(x){m[x[key]]=(m[x[key]]||0)+1;});return m;}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+/* ============ 筛选面板渲染 ============ */
+function optRow(group,val,label,color,total){
+  var ck=state[group].indexOf(val)>=0?'checked':'';
+  return '<label class="opt"><input type="checkbox" data-group="'+group+'" data-val="'+val+'" '+ck+'>'+
+    '<span class="opt-box"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>'+
+    (color?'<span class="opt-dot" style="background:'+color+'"></span>':'')+
+    '<span>'+label+'</span><span class="opt-count">'+total+'</span></label>';
+}
+function buildFilters(){
+  var oc=countBy(JOBS,'o'),ic=countBy(JOBS,'i'),h='';
+  h+='<div class="filter-group"><div class="filter-title">单位性质</div>';
+  ['soe','priv','fgn','gov'].forEach(function(k){h+=optRow('own',k,OWN_MAP[k].name,OWN_MAP[k].color,oc[k]||0);});
+  h+='</div><div class="filter-group"><div class="filter-title">行业方向（专业大类）</div>';
+  ['econ','edu'].forEach(function(cat){
+    var keys=Object.keys(IND_MAP).filter(function(k){return CAT_OF[k]===cat;});
+    var sel=keys.filter(function(k){return state.ind.indexOf(k)>=0;});
+    var catCnt=keys.reduce(function(s,k){return s+(ic[k]||0);},0);
+    var ck=sel.length===keys.length?'checked':'',mixed=sel.length>0&&sel.length<keys.length?'1':'';
+    var boxState=sel.length===0?'':(sel.length===keys.length?'cat-checked':'cat-mixed');
+    var arrowPath=state.collapsed[cat]?'M9 6l6 6-6 6':'M6 9l6 6 6-6';
+    h+='<div class="cat-block'+(state.collapsed[cat]?' collapsed':'')+'">'+
+      '<div class="cat-row">'+
+        '<button class="cat-toggle" data-cat-toggle="'+cat+'" aria-label="展开或折叠"><svg class="icon"><path d="'+arrowPath+'"/></svg></button>'+
+        '<label class="cat-label"><input type="checkbox" data-cat="'+cat+'" '+ck+' data-mixed="'+mixed+'">'+
+          '<span class="opt-box '+boxState+'"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>'+
+          '<span class="cat-name">'+CAT_MAP[cat]+'</span><span class="opt-count">'+catCnt+'</span></label>'+
+      '</div>'+
+      '<div class="cat-children">'+keys.map(function(k){return optRow('ind',k,IND_MAP[k],null,ic[k]||0);}).join('')+'</div>'+
+    '</div>';
+  });
+  h+='</div><div class="filter-group"><div class="filter-title">学历要求</div><select class="sel" data-sel="edu">';
+  EDU_LIST.forEach(function(c){h+='<option '+(state.edu===c?'selected':'')+'>'+c+'</option>';});
+  h+='</select></div>';
+  return h;
+}
+function syncCatBox(box){
+  box.querySelectorAll('input[data-cat]').forEach(function(inp){inp.indeterminate=inp.dataset.mixed==='1';});
+}
+function renderFilters(){
+  $('filterBody').innerHTML=buildFilters();syncCatBox($('filterBody'));
+  $('filterBodyM').innerHTML=buildFilters();syncCatBox($('filterBodyM'));
+}
+
+/* ============ 数据筛选与排序 ============ */
+function matchOther(j){
+  var q=state.q.trim().toLowerCase();
+  if(state.own.length&&state.own.indexOf(j.o)<0)return false;
+  if(state.ind.length&&state.ind.indexOf(j.i)<0)return false;
+  if(state.edu!=='不限'){
+    var order=['本科','硕士','博士'];
+    if(order.indexOf(j.edu)<order.indexOf(state.edu))return false;
+  }
+  if(q){
+    var hay=(j.t+' '+j.c+' '+j.tags.join(' ')+' '+IND_MAP[j.i]+' '+j.city).toLowerCase();
+    if(hay.indexOf(q)<0)return false;
+  }
+  return true;
+}
+function getFiltered(){
+  var list=JOBS.filter(function(j){
+    if(!matchOther(j))return false;
+    if(state.type!=='all'&&j.ty!==state.type)return false;
+    return true;
+  });
+  list.sort(function(a,b){
+    if(state.sort==='deadline')return daysTo(a.dl)-daysTo(b.dl);
+    if(state.sort==='hot')return (b.hot-a.hot)||((b.pub>a.pub)?1:-1);
+    return b.pub>a.pub?1:-1;
+  });
+  return list;
+}
+/* 类型标签计数：随当前其他筛选条件实时变化（不受所选类型限制） */
+function typeCounts(){
+  var c={all:0,intern:0,campus:0,social:0};
+  JOBS.forEach(function(j){if(matchOther(j)){c.all++;c[j.ty]++;}});
+  return c;
+}
+
+/* ============ 岗位行渲染 ============ */
+function deadlineHTML(j){
+  var d=daysTo(j.dl),cls=d<=3?'deadline urgent':'deadline',txt;
+  if(!isFinite(d))txt='截止日期待定';else if(d===0)txt='今天截止';else if(d===1)txt='明天截止';else txt=md(j.dl)+' · 剩'+d+'天';
+  return '<div class="'+cls+'"><svg class="icon"><use href="#i-calendar"/></svg>'+txt+'</div>';
+}
+function rowHTML(j){
+  var ag=daysAgo(j.pub),agTxt=ag===null?'发布日期待定':(ag===0?'今天发布':ag+'天前发布');
+  var tags=j.tags.slice(0,4).map(function(t){return '<span class="chip">'+esc(t)+'</span>';}).join('');
+  var sal=j.sal?'<span class="sep"></span><span class="num" style="color:var(--ink-2)">'+j.sal+'</span>':'';
+  var ap=APPLIED[j.id]?'<span class="applied-dot"><svg class="icon" style="width:12px;height:12px"><use href="#i-check"/></svg>已投递</span>':'';
+  return '<div class="job-row" data-id="'+j.id+'">'+
+    '<div class="job-main">'+
+      '<div class="job-line1"><span class="job-title">'+esc(j.t)+'</span>'+
+        '<span class="badge '+TYPE_MAP[j.ty].cls+'"><span class="bdot" style="background:'+TYPE_MAP[j.ty].color+'"></span>'+TYPE_MAP[j.ty].name+'</span>'+
+        '<span class="badge '+OWN_MAP[j.o].cls+'"><span class="bdot" style="background:'+OWN_MAP[j.o].color+'"></span>'+OWN_MAP[j.o].name+'</span>'+
+        (j.hot?'<span class="hot-flag"><svg class="icon" style="width:11px;height:11px"><use href="#i-fire"/></svg>热门</span>':'')+
+      '</div>'+
+      '<div class="job-line2"><span class="job-company">'+esc(j.c)+'</span><span class="sep"></span><span>'+IND_MAP[j.i]+'</span><span class="sep"></span>'+
+        '<span style="display:inline-flex;align-items:center;gap:4px"><svg class="icon" style="width:13px;height:13px"><use href="#i-pin"/></svg>'+j.city+'</span><span class="sep"></span>'+
+        '<span style="display:inline-flex;align-items:center;gap:4px"><svg class="icon" style="width:13px;height:13px"><use href="#i-grad"/></svg>'+j.edu+'</span>'+sal+'</div>'+
+      '<div class="job-tags">'+tags+'</div>'+
+    '</div>'+
+    '<div class="job-side"><div>'+deadlineHTML(j)+'<div class="pub-date">'+agTxt+'</div></div>'+
+      '<div class="row-actions">'+ap+'<button class="fav-btn '+(SAVED[j.id]?'on':'')+'" data-fav="'+j.id+'" aria-label="收藏"><svg class="icon"><use href="#i-star"/></svg></button></div>'+
+    '</div></div>';
+}
+function renderJobs(){
+  var list=getFiltered();
+  $('jobList').innerHTML=list.map(rowHTML).join('');
+  $('resultCount').textContent=list.length;
+  $('emptyBox').style.display=list.length?'none':'block';
+  $('filterApplyCnt').textContent=list.length;
+  var tc=typeCounts();
+  $('cntAll').textContent=tc.all;
+  $('cntIntern').textContent=tc.intern;
+  $('cntCampus').textContent=tc.campus;
+  $('cntSocial').textContent=tc.social;
+}
+
+/* ============ 统计数字 ============ */
+function renderStats(){
+  $('stTotal').textContent=JOBS.length;$('metaTotal').textContent=JOBS.length;
+  $('stIntern').textContent=JOBS.filter(function(j){return j.ty==='intern';}).length;
+  $('stCampus').textContent=JOBS.filter(function(j){return j.ty==='campus';}).length;
+  $('stSocial').textContent=JOBS.filter(function(j){return j.ty==='social';}).length;
+  $('stUrgent').textContent=JOBS.filter(function(j){var d=daysTo(j.dl);return isFinite(d)&&d>=0&&d<=7;}).length;
+  $('stWeek').textContent=JOBS.filter(function(j){var d=daysAgo(j.pub);return d!==null&&d>=0&&d<=7;}).length;
+  var sc=Object.keys(SAVED).length,ac=Object.keys(APPLIED).length;
+  $('navSavedCnt').textContent=sc;$('savedCnt').textContent=sc;$('appliedCnt').textContent=ac;
+  $('metaTime').textContent=DATA_UPDATED_AT;
+}
+
+/* ============ 异步加载 jobs.json ============ */
+function textValue(v,fallback){return typeof v==='string'&&v.trim()?v.trim():(fallback||'');}
+function listValue(v,fallback){
+  if(!Array.isArray(v))return fallback||[];
+  return v.map(function(x){return textValue(x);}).filter(Boolean);
+}
+function normalizeJob(raw){
+  if(!raw||typeof raw!=='object')return null;
+  var id=textValue(String(raw.id==null?'':raw.id));
+  var title=textValue(raw.t),company=textValue(raw.c),city=textValue(raw.city);
+  if(!id||!title||!company||city!=='北京')return null;
+  if(!TYPE_MAP[raw.ty]||!OWN_MAP[raw.o]||!IND_MAP[raw.i])return null;
+  var url=textValue(raw.url);
+  if(url&&!/^https?:\/\//i.test(url))url='';
+  return {id:id,t:title,c:company,o:raw.o,i:raw.i,cat:textValue(raw.cat,CAT_OF[raw.i]),ty:raw.ty,
+    city:'北京',edu:textValue(raw.edu,'不限'),pub:textValue(raw.pub),dl:textValue(raw.dl),
+    sal:textValue(raw.sal),hot:Number(raw.hot)||0,src:textValue(raw.src,'国聘网'),tags:listValue(raw.tags),
+    resp:listValue(raw.resp,['详见职位描述']),req:listValue(raw.req,['详见职位要求']),
+    about:textValue(raw.about,company),url:url};
+}
+function setDataStatus(kind,title,detail){
+  var box=$('dataStatus');
+  box.hidden=false;box.className='data-status '+kind;
+  $('dataStatusTitle').textContent=title;$('dataStatusText').textContent=detail;
+  $('dataRetry').hidden=kind!=='error';
+  $('jobList').hidden=true;$('emptyBox').style.display='none';
+}
+function resetCharts(){
+  Object.keys(charts).forEach(function(k){try{charts[k].dispose();}catch(e){}});
+  charts={};chartsReady=false;
+}
+async function loadJobs(announce){
+  if(dataLoading)return false;
+  dataLoading=true;
+  var hadData=JOBS.length>0,refresh=$('refreshBtn');
+  refresh.disabled=true;
+  setDataStatus('loading','岗位数据加载中','正在读取 jobs.json，请稍候…');
+  try{
+    var response=await fetch('jobs.json',{cache:'no-store'});
+    if(!response.ok)throw new Error('HTTP '+response.status);
+    var data=await response.json();
+    if(!Array.isArray(data))throw new Error('jobs.json 的顶层结构必须是数组');
+    if(!data.length)throw new Error('jobs.json 暂无岗位数据');
+    var seen={},invalid=0,normalized=[];
+    data.forEach(function(raw){
+      var job=normalizeJob(raw),key=job&&(job.url||job.id);
+      if(!job||seen[key]){invalid++;return;}
+      seen[key]=1;normalized.push(job);
+    });
+    if(!normalized.length)throw new Error('jobs.json 中没有可用的北京岗位');
+    JOBS=normalized;
+    var stamp=response.headers.get('Last-Modified');
+    DATA_UPDATED_AT=(stamp?new Date(stamp):new Date()).toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+    $('dataStatus').hidden=true;$('jobList').hidden=false;
+    resetCharts();renderAll();renderSaved();
+    if(document.querySelector('#view-overview.active'))setTimeout(ensureCharts,60);
+    if(announce)toast('已重新载入 '+JOBS.length+' 个岗位'+(invalid?'，跳过 '+invalid+' 条异常或重复数据':''),'i-refresh');
+    return true;
+  }catch(err){
+    var direct=location.protocol==='file:';
+    var detail=direct?'浏览器阻止了本地网页读取 jobs.json。请双击“启动京岗雷达.bat”，通过本地服务器打开页面。':'请确认 jobs.json 与网页位于同一目录且内容有效。错误：'+err.message;
+    if(hadData){$('dataStatus').hidden=true;$('jobList').hidden=false;toast('重新加载失败，继续显示上一份数据');}
+    else setDataStatus('error','岗位数据加载失败',detail);
+    console.error('加载 jobs.json 失败：',err);
+    return false;
+  }finally{
+    dataLoading=false;refresh.disabled=false;
+  }
+}
+
+/* ============ Toast ============ */
+function toast(msg,icon){
+  var w=$('toastWrap'),d=document.createElement('div');d.className='toast';
+  d.innerHTML='<svg class="icon"><use href="#'+(icon||'i-check')+'"/></svg><span>'+esc(msg)+'</span>';
+  w.appendChild(d);
+  setTimeout(function(){d.classList.add('out');setTimeout(function(){d.remove();},260);},2200);
+}
+
+/* ============ 重置筛选 ============ */
+function resetFilters(){
+  state.q='';state.own=[];state.ind=[];state.edu='不限';state.type='all';
+  $('searchInput').value='';$('searchClear').style.display='none';
+  document.querySelectorAll('#typeSeg .seg-btn').forEach(function(b){b.classList.toggle('active',b.dataset.type==='all');});
+  renderAll();
+}
+function renderAll(){renderFilters();renderJobs();renderStats();}
+// LOGIC-CONTINUE
+
+/* ============ 详情抽屉 ============ */
+function liList(arr){return arr.map(function(x){return '<li>'+esc(x)+'</li>';}).join('');}
+function openDrawer(id){
+  var j=JOBS.find(function(x){return x.id===id;});if(!j)return;
+  state.current=id;
+  $('dTitle').textContent=j.t;
+  $('dBadges').innerHTML='<span class="badge '+TYPE_MAP[j.ty].cls+'"><span class="bdot" style="background:'+TYPE_MAP[j.ty].color+'"></span>'+TYPE_MAP[j.ty].name+'</span>'+
+    '<span class="badge '+OWN_MAP[j.o].cls+'"><span class="bdot" style="background:'+OWN_MAP[j.o].color+'"></span>'+OWN_MAP[j.o].name+'</span>'+
+    '<span class="badge b-gov" style="color:var(--ink-2);background:var(--paper)"><svg class="icon" style="width:12px;height:12px"><use href="#i-file"/></svg>'+IND_MAP[j.i]+'</span>';
+  var d=daysTo(j.dl);
+  var deadlineText=isFinite(d)?md(j.dl)+'截止（剩'+d+'天）':'截止日期待定';
+  $('dMeta').innerHTML=
+    '<span><svg class="icon"><use href="#i-building"/></svg>'+esc(j.c)+'</span>'+
+    '<span><svg class="icon"><use href="#i-pin"/></svg>'+j.city+'</span>'+
+    '<span><svg class="icon"><use href="#i-grad"/></svg>'+j.edu+'及以上</span>'+
+    '<span><svg class="icon"><use href="#i-clock"/></svg>'+deadlineText+'</span>'+
+    (j.sal?'<span style="color:var(--ink-2);font-weight:600">'+j.sal+'</span>':'');
+  $('dResp').innerHTML=liList(j.resp);
+  $('dReq').innerHTML=liList(j.req);
+  $('dAbout').textContent=j.about;
+  $('dTags').innerHTML=j.tags.map(function(t){return '<span class="chip">'+esc(t)+'</span>';}).join('');
+  $('dSource').textContent=j.src;
+  var durl=$('dUrl');
+  if(j.url){durl.href=j.url;durl.style.display='';}else{durl.style.display='none';}
+  $('dPub').textContent=md(j.pub)+'发布';
+  syncDrawerBtns();
+  $('mask').classList.add('open');$('drawer').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeDrawer(){
+  $('mask').classList.remove('open');$('drawer').classList.remove('open');
+  document.body.style.overflow='';state.current=null;
+}
+function syncDrawerBtns(){
+  var id=state.current,f=$('dFav'),fi=f.querySelector('.icon');
+  if(SAVED[id]){f.style.color='var(--accent)';f.style.borderColor='var(--accent)';f.style.background='var(--accent-soft)';fi.style.fill='currentColor';$('dFavText').textContent='已收藏';}
+  else{f.style.color='';f.style.borderColor='';f.style.background='';fi.style.fill='';$('dFavText').textContent='收藏';}
+  $('dApplied').classList.toggle('on',!!APPLIED[id]);
+  $('dAppliedText').textContent=APPLIED[id]?'已标记投递':'标记已投递';
+}
+function toggleFav(id){
+  if(SAVED[id]){delete SAVED[id];toast('已取消收藏');}else{SAVED[id]=1;toast('已加入收藏');}
+  persist();renderJobs();renderStats();renderSaved();
+  if(state.current===id)syncDrawerBtns();
+}
+function toggleApplied(id){
+  if(APPLIED[id]){delete APPLIED[id];toast('已取消投递标记');}else{APPLIED[id]=1;if(!SAVED[id])SAVED[id]=1;toast('已标记为投递，可在「我的收藏-已投递」查看');}
+  persist();renderJobs();renderStats();renderSaved();
+  if(state.current===id)syncDrawerBtns();
+}
+
+/* ============ 收藏视图 ============ */
+function emptyHTML(title,desc,btn){
+  return '<div class="empty"><svg class="icon" style="width:52px;height:52px;stroke-width:1.3"><use href="#i-star"/></svg><h4>'+title+'</h4><p>'+desc+'</p>'+
+    (btn?'<button class="btn btn-primary" data-go-jobs>去岗位看板看看</button>':'')+'</div>';
+}
+function renderSaved(){
+  var ids=state.savedTab==='saved'?Object.keys(SAVED):Object.keys(APPLIED);
+  var rows=ids.map(function(id){var j=JOBS.find(function(x){return x.id===id;});return j?rowHTML(j):'';}).join('');
+  if(state.savedTab==='saved')
+    $('savedList').innerHTML=rows||emptyHTML('还没有收藏任何机会','看到感兴趣的岗位，点击卡片右下角的星标即可收藏，方便统一跟踪投递进度。',1);
+  else
+    $('savedList').innerHTML=rows||emptyHTML('还没有投递记录','在岗位详情中点击「标记已投递」，这里会帮你汇总所有已申请的岗位。',1);
+  var sc=Object.keys(SAVED).length,ac=Object.keys(APPLIED).length;
+  $('savedCnt').textContent=sc;$('appliedCnt').textContent=ac;$('navSavedCnt').textContent=sc;
+}
+
+/* ============ 数据概览图表 ============ */
+var charts={},chartsReady=false;
+var AXIS={axisLine:{lineStyle:{color:'#D6DDE2'}},axisTick:{show:false},axisLabel:{color:'#6A7885',fontSize:11}};
+function hBar(dom,data){
+  var names=data.map(function(d){return d.name;}),vals=data.map(function(d){return d.value;}),cols=data.map(function(d){return d.color;});
+  var c=echarts.init($(dom));
+  c.setOption({
+    grid:{left:8,right:36,top:8,bottom:8,containLabel:true},
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'},confine:true,valueFormatter:function(v){return v+' 个';}},
+    xAxis:Object.assign({type:'value',splitLine:{lineStyle:{color:'#EEF1F4'}},minInterval:1},AXIS),
+    yAxis:Object.assign({type:'category',data:names.reverse(),axisLabel:Object.assign({},AXIS.axisLabel,{fontSize:12,color:'#3B4A57'})},AXIS,{axisLine:{show:false}}),
+    series:[{type:'bar',data:vals.reverse().map(function(v,i){return {value:v,itemStyle:{color:cols[cols.length-1-i],borderRadius:[0,4,4,0]}};}),
+      barWidth:15,label:{show:true,position:'right',color:'#6A7885',fontSize:11}}]
+  });
+  return c;
+}
+function buildCharts(){
+  // 趋势
+  var xl=[],yv=[],cm={};
+  JOBS.forEach(function(j){cm[j.pub]=(cm[j.pub]||0)+1;});
+  for(var i=29;i>=0;i--){var d=new Date(TODAY.getTime()-i*86400000);
+    var iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    xl.push((d.getMonth()+1)+'/'+d.getDate());yv.push(cm[iso]||0);}
+  charts.trend=echarts.init($('chartTrend'));
+  charts.trend.setOption({
+    grid:{left:20,right:22,top:26,bottom:30},
+    tooltip:{trigger:'axis',confine:true,valueFormatter:function(v){return v+' 个新岗位';}},
+    xAxis:Object.assign({type:'category',data:xl,boundaryGap:true},AXIS),
+    yAxis:Object.assign({type:'value',splitLine:{lineStyle:{color:'#EEF1F4'}},minInterval:1},AXIS),
+    series:[{type:'bar',data:yv,barMaxWidth:15,itemStyle:{color:'#0E4D5C',borderRadius:[3,3,0,0]},
+      emphasis:{itemStyle:{color:'#156678'}}}]
+  });
+  // 单位性质
+  charts.own=hBar('chartOwn',['soe','priv','fgn','gov'].map(function(k){
+    return {name:OWN_MAP[k].name,value:JOBS.filter(function(j){return j.o===k;}).length,color:OWN_MAP[k].color};}));
+  // 类型
+  charts.type=hBar('chartType',['intern','campus','social'].map(function(k){
+    return {name:TYPE_MAP[k].name,value:JOBS.filter(function(j){return j.ty===k;}).length,color:TYPE_MAP[k].color};}));
+  // 行业
+  var inds=Object.keys(IND_MAP).map(function(k){return {name:IND_MAP[k],value:JOBS.filter(function(j){return j.i===k;}).length,color:CAT_OF[k]==='econ'?'#0E4D5C':'#B0862A'};})
+    .filter(function(d){return d.value;}).sort(function(a,b){return b.value-a.value;});
+  charts.ind=hBar('chartInd',inds);
+  // 城市
+  var cc={};JOBS.forEach(function(j){cc[j.city]=(cc[j.city]||0)+1;});
+  var cities=Object.keys(cc).map(function(k){return {name:k,value:cc[k],color:'#2B6CB0'};})
+    .sort(function(a,b){return b.value-a.value;}).slice(0,9);
+  charts.city=hBar('chartCity',cities);
+  // 专业大类
+  charts.cat=hBar('chartCat',['econ','edu'].map(function(k){
+    return {name:CAT_MAP[k],value:JOBS.filter(function(j){return CAT_OF[j.i]===k;}).length,color:k==='econ'?'#0E4D5C':'#B0862A'};}));
+  chartsReady=true;
+}
+function ensureCharts(){if(!chartsReady)buildCharts();else Object.keys(charts).forEach(function(k){charts[k].resize();});}
+
+/* ============ 视图切换 ============ */
+function switchView(v){
+  document.querySelectorAll('.view').forEach(function(el){el.classList.toggle('active',el.id==='view-'+v);});
+  document.querySelectorAll('.nav-item').forEach(function(el){el.classList.toggle('active',el.dataset.view===v);});
+  if(v==='overview')setTimeout(ensureCharts,60);
+  if(v==='saved')renderSaved();
+}
+
+/* ============ 事件绑定 ============ */
+function bindList(container){
+  $(container).addEventListener('click',function(e){
+    var f=e.target.closest('[data-fav]');
+    if(f){e.stopPropagation();toggleFav(f.dataset.fav);return;}
+    var row=e.target.closest('.job-row');
+    if(row)openDrawer(row.dataset.id);
+    var gj=e.target.closest('[data-go-jobs]');
+    if(gj)switchView('jobs');
+  });
+}
+function bindFilter(box){
+  box.addEventListener('click',function(e){
+    var tg=e.target.closest('[data-cat-toggle]');
+    if(tg){e.preventDefault();var c1=tg.dataset.catToggle;state.collapsed[c1]=!state.collapsed[c1];renderFilters();return;}
+    var cat=e.target.closest('input[data-cat]');
+    if(cat){
+      var ck=cat.dataset.cat;
+      var keys=Object.keys(IND_MAP).filter(function(k){return CAT_OF[k]===ck;});
+      var allSel=keys.every(function(k){return state.ind.indexOf(k)>=0;});
+      if(allSel)state.ind=state.ind.filter(function(k){return CAT_OF[k]!==ck;});
+      else keys.forEach(function(k){if(state.ind.indexOf(k)<0)state.ind.push(k);});
+      renderFilters();renderJobs();renderStats();return;
+    }
+    var inp=e.target.closest('input[data-group]');
+    if(inp){
+      var g=inp.dataset.group,v=inp.dataset.val,arr=state[g],ix=arr.indexOf(v);
+      if(ix>=0)arr.splice(ix,1);else arr.push(v);
+      renderFilters();renderJobs();renderStats();
+    }
+  });
+  box.addEventListener('change',function(e){
+    var sel=e.target.closest('select');if(!sel)return;
+    var k=sel.dataset.sel;state[k]=sel.value;
+    var other=box===$('filterBody')?$('filterBodyM'):$('filterBody');
+    var os=other.querySelector('select[data-sel="'+k+'"]');if(os)os.value=sel.value;
+    renderJobs();renderStats();
+  });
+}
+function init(){
+  document.querySelectorAll('.nav-item').forEach(function(b){b.addEventListener('click',function(){switchView(b.dataset.view);});});
+  document.querySelectorAll('#typeSeg .seg-btn').forEach(function(b){b.addEventListener('click',function(){
+    state.type=b.dataset.type;
+    document.querySelectorAll('#typeSeg .seg-btn').forEach(function(x){x.classList.toggle('active',x===b);});
+    renderJobs();
+  });});
+  $('sortSel').addEventListener('change',function(){state.sort=this.value;renderJobs();});
+  $('searchInput').addEventListener('input',function(){
+    state.q=this.value;$('searchClear').style.display=this.value?'grid':'none';renderJobs();
+  });
+  $('searchClear').addEventListener('click',function(){state.q='';this.style.display='none';$('searchInput').value='';renderJobs();});
+  $('refreshBtn').addEventListener('click',function(){loadJobs(true);});
+  $('dataRetry').addEventListener('click',function(){loadJobs(false);});
+  $('filterClear').addEventListener('click',resetFilters);
+  $('emptyReset').addEventListener('click',resetFilters);
+  $('filterResetM').addEventListener('click',function(){resetFilters();toast('已重置筛选条件');});
+  bindFilter($('filterBody'));bindFilter($('filterBodyM'));
+  bindList('jobList');bindList('savedList');
+  $('mask').addEventListener('click',closeDrawer);
+  $('drawerClose').addEventListener('click',closeDrawer);
+  $('dFav').addEventListener('click',function(){if(state.current)toggleFav(state.current);});
+  $('dApplied').addEventListener('click',function(){if(state.current)toggleApplied(state.current);});
+  $('dLink').addEventListener('click',function(){
+    var j=JOBS.find(function(x){return x.id===state.current;});
+    if(j&&j.url)window.open(j.url,'_blank','noopener');else toast('该岗位暂时没有原文链接');
+  });
+  document.querySelectorAll('#savedSeg .seg-btn').forEach(function(b){b.addEventListener('click',function(){
+    state.savedTab=b.dataset.saved;
+    document.querySelectorAll('#savedSeg .seg-btn').forEach(function(x){x.classList.toggle('active',x===b);});
+    renderSaved();
+  });});
+  // 移动端筛选抽屉
+  $('mobileFilterBtn').addEventListener('click',function(){$('filterDrawer').classList.add('open');});
+  function closeFD(){$('filterDrawer').classList.remove('open');}
+  $('filterMask').addEventListener('click',closeFD);
+  $('filterSheetClose').addEventListener('click',closeFD);
+  $('filterApplyM').addEventListener('click',closeFD);
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeDrawer();$('filterDrawer').classList.remove('open');}});
+  window.addEventListener('resize',function(){if(chartsReady)Object.keys(charts).forEach(function(k){charts[k].resize();});});
+  renderSaved();loadJobs(false);
+}
+init();
+</script>
+
+</body>
+</html>
